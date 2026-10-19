@@ -39,7 +39,7 @@ const PORCH = { x0: OUT.x1, x1: 11.45, z0: 7.6, z1: OUT.z1 };
 const ROOF = { xL: -1.36, xR: 8.75, xP: 12.43, zA: -4.15, zP: 6.52, zB: 14.87, th: 0.24 };
 
 const ROOMS = [
-  { id: 'living', name: 'Zona giorno', area: '35,71 m²', floor: 'porc', rects: [[0, 9.58, 7.40, 13.52], [2.98, 8.09, 7.40, 9.58]], lamp: [[1.8, 12.3], [5.9, 9.2], [5.9, 12.0]], label: [3.2, 11.2], spawn: [3.48, 9.0, Math.PI] },
+  { id: 'living', name: 'Zona giorno', area: '35,71 m²', floor: 'porc', rects: [[0, 9.58, 7.40, 13.52], [2.98, 8.09, 7.40, 9.58]], lamp: [[1.7, 11.6], [5.9, 9.2], [5.9, 12.4]], label: [3.2, 11.2], spawn: [3.48, 9.0, Math.PI] },
   { id: 'dis', name: 'Disimpegno', area: '5,87 m²', floor: 'wood', rects: [[2.98, 2.89, 3.98, 7.96], [3.98, 4.11, 4.57, 5.63]], lamp: [[3.48, 3.9], [3.48, 6.4]], label: [3.48, 5.4], spawn: [3.48, 7.4, 0] },
   { id: 'matr', name: 'Camera matrimoniale', area: '15,02 m²', floor: 'wood', rects: [[3.45, 0, 7.40, 2.76], [4.11, 2.76, 7.40, 3.98]], lamp: [[5.4, 1.9]], label: [5.6, 2.3], spawn: [5.6, 3.1, 0] },
   { id: 'cam', name: 'Camera', area: '12,68 m²', floor: 'wood', rects: [[0, 0, 3.32, 2.76], [0, 2.76, 2.85, 3.98]], lamp: [[1.7, 1.9]], label: [1.9, 2.0], spawn: [2.2, 3.4, 0.3] },
@@ -687,22 +687,28 @@ at(6.0, 5.76, 0, () => { P(gRBox(-0.22, 1.25, 0, 0.22, 1.95, 0.32, 0.02), M.whit
   for (const dx of [-0.1, -0.03, 0.04, 0.11]) P(gCyl(dx, 0.4, 0.15, 0.012, 0.012, 0.85, 8), M.copper, { uv: false }); });
 at(6.95, 5.76, 0, () => { P(gRBox(-0.3, 0.0, 0, 0.3, 0.86, 0.5, 0.02), M.white); P(gBox(-0.24, 0.6, 0.06, 0.24, 0.87, 0.44), M.blackMetal); P(gCyl(0, 0.86, 0.04, 0.015, 0.015, 0.2, 8), M.chrome); solidLocal(-0.3, 0, 0.3, 0.5); });
 at(5.5, 7.96, Math.PI, () => shelf(1.6));
-// Zona giorno – cucina a L, isola, pranzo, living
-at(2.9, 13.52, Math.PI, () => kitchenRun(2.9, { hob: 1.45, tall: 0.6 }));     // lungo la parete di fondo, da x=2.9 verso x=0
-at(0, 12.92, Math.PI / 2, () => kitchenRun(1.62, { sink: 0.7, wall: false }));  // lungo la parete sinistra, lavello sotto la finestra
-at(2.2, 11.35, 0, () => { P(gRBox(-0.9, 0.0, -0.45, 0.9, 0.88, 0.45, 0.01), M.lacquer); P(gRBox(-1.0, 0.88, -0.6, 1.0, 0.92, 0.48, 0.006), M.top); solidLocal(-0.9, -0.45, 0.9, 0.45); });
-at(1.85, 10.55, 0, barStool); at(2.55, 10.55, 0, barStool);
-pendant(2.2, 11.35, 1.75, 3, 0.55);
-at(5.9, 9.2, 0, () => table(1.9, 0.95));
-for (const x of [5.3, 5.9, 6.5]) { at(x, 8.55, Math.PI, () => diningChair()); at(x, 9.85, 0, () => diningChair()); }
-pendant(5.9, 9.2, 1.65, 1);
-at(5.9, 13.52, Math.PI, () => tvUnit(2.0));
-at(5.9, 12.25, 0, () => coffeeTable(0.42));
-rug(4.7, 10.65, 7.1, 13.0);
+// Zona giorno – lato destro (verso portico): cucina a L, isola, pranzo; lato sinistro: soggiorno
+at(IN.x1, IN.z1, Math.PI, () => kitchenRun(2.98, { hob: 1.3, tall: 0.6 }));      // parete di fondo, da x=7.40 verso il setto d'ingresso
+at(IN.x1, 11.95, -Math.PI / 2, () => kitchenRun(0.97, { wall: false }));          // ritorno lungo la parete destra
+at(5.9, 11.65, 0, () => {                                                          // isola con lavello, sgabelli sul lato pranzo
+  P(gRBox(-0.9, 0.0, -0.4, 0.9, 0.88, 0.4, 0.01), M.lacquer); P(gRBox(-1.0, 0.88, -0.58, 1.0, 0.92, 0.45, 0.006), M.top);
+  P(gRBox(-0.35, 0.915, -0.15, 0.35, 0.925, 0.3, 0.01), M.steel); P(gBox(-0.3, 0.75, -0.1, 0.3, 0.92, 0.25), M.blackMetal);
+  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.92, 0.36), new THREE.Vector3(0, 1.26, 0.36), new THREE.Vector3(0, 1.3, 0.24), new THREE.Vector3(0, 1.18, 0.14)]);
+  P(new THREE.TubeGeometry(curve, 20, 0.012, 8), M.chrome, { uv: false });
+  solidLocal(-0.9, -0.4, 0.9, 0.4);
+});
+at(5.55, 10.85, 0, barStool); at(6.25, 10.85, 0, barStool);
+pendant(5.9, 11.65, 1.75, 3, 0.55);
+at(5.9, 9.15, 0, () => table(1.9, 0.95));
+for (const x of [5.3, 5.9, 6.5]) { at(x, 8.38, Math.PI, () => diningChair()); at(x, 9.92, 0, () => diningChair()); }
+pendant(5.9, 9.15, 1.65, 1);
+at(1.5, IN.z1, Math.PI, () => tvUnit(2.0));
+at(1.7, 12.2, 0, () => coffeeTable(0.42));
+rug(0.35, 10.55, 3.0, 13.0);
 // Disimpegno
 ceilingLight(3.48, 3.9); ceilingLight(3.48, 6.4);
 for (const r of ROOMS) if (!['living', 'dis'].includes(r.id)) for (const [x, z] of r.lamp) ceilingLight(x, z);
-ceilingLight(1.8, 12.3); ceilingLight(5.9, 12.0);
+ceilingLight(1.7, 11.6);
 // esterni: lampade a parete, tavolo del portico
 wallLamp(2.75, OUT.z1, 0, 1); wallLamp(4.45, OUT.z1, 0, 1); wallLamp(OUT.x1, 6.85 - 0.75, 1, 0); wallLamp(OUT.x1, 9.1, 1, 0); wallLamp(OUT.x1, 12.2, 1, 0);
 at(9.7, 11.4, 0, () => table(0.95, 1.8, 0.75, M.walnut));
@@ -765,14 +771,14 @@ function place(name, x, z, rot, { scale = 1, y = 0, parent = furnGroup, solidR, 
 const loads = [['sofa', sofaURL], ['chair', chairURL], ['plant', plantURL], ['vase', vaseURL], ['pouf', poufURL], ['car', carURL]]
   .map(([k, u]) => new Promise(res => loader.load(u, g => { models[k] = g.scene; res(); }, undefined, e => { console.warn(k, e); res(); })));
 Promise.all(loads).then(() => {
-  place('sofa', 5.9, 11.3, Math.PI, { solidR: [1.1, 0.5] });                  // divano rivolto verso la TV
-  place('chair', 0.75, 10.15, Math.PI / 2 + 0.3, { solidR: [0.4, 0.4] });  // poltrona lettura vicino alla finestra
+  place('sofa', 1.7, 11.15, Math.PI, { solidR: [1.1, 0.5] });                  // divano rivolto verso la TV
+  place('chair', 0.65, 12.35, Math.PI / 2, { solidR: [0.4, 0.4] });  // poltrona lettura vicino alla finestra
   place('chair', 8.55, 8.4, Math.PI / 2 + 0.4, { solidR: [0.4, 0.4] }); place('chair', 8.55, 9.4, Math.PI / 2 - 0.4, { solidR: [0.4, 0.4] });
-  place('pouf', 4.75, 12.4, 0, { scale: 1.4 });
-  place('plant', 7.0, 13.05, 0.4, { scale: 1.35, solidR: [0.3, 0.3] }); place('plant', 0.45, 9.95, 1.2, { scale: 1.1 });
-  place('plant', 11.0, 7.4, 2.0, { scale: 1.2 }); place('plant', 10.9, 13.5, 0.7, { scale: 1.2 }); place('plant', 4.75, 13.55, 0, { scale: 0.9 });
+  place('pouf', 2.85, 12.35, 0, { scale: 1.4 });
+  place('plant', 0.4, 13.1, 0.4, { scale: 1.35, solidR: [0.3, 0.3] }); place('plant', 0.45, 9.95, 1.2, { scale: 1.1 });
+  place('plant', 11.0, 7.4, 2.0, { scale: 1.2 }); place('plant', 10.9, 13.5, 0.7, { scale: 1.2 }); place('plant', 2.7, 9.9, 0, { scale: 0.9 });
   place('plant', 2.6, 0.5, 2.1, { scale: 0.8 });
-  place('vase', 5.9, 9.2, 0, { y: 0.75, scale: 1.6 });
+  place('vase', 5.9, 9.15, 0, { y: 0.75, scale: 1.6 });
   place('vase', 9.7, 11.4, 1.2, { y: 0.75, scale: 1.4 });
   place('car', 3.3, -2.0, -Math.PI / 2, { scale: 1.0, parent: world, solidR: [2.2, 1.1] });
   document.body.classList.add('loaded');
