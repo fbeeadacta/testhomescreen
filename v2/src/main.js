@@ -126,8 +126,9 @@ TX.rug = canvasTex(512, (g, s) => {
 }, { rep: 1 });
 TX.fabric = canvasTex(256, (g, s) => { g.fillStyle = '#fff'; g.fillRect(0, 0, s, s); for (let i = 0; i < s; i += 2) { g.fillStyle = `rgba(0,0,0,${0.03 + rnd() * 0.04})`; g.fillRect(i, 0, 1, s); g.fillRect(0, i, s, 1); } }, { rep: 1 });
 
-const tl = new THREE.TextureLoader();
-function img(url, { srgb = true, rep = 1 } = {}) { const t = tl.load(url); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; }
+function img(bytes, { srgb = true, rep = 1 } = {}) {
+  const t = new THREE.Texture(); t.flipY = false;
+  createImageBitmap(new Blob([bytes], { type: 'image/jpeg' })).then(b => { t.image = b; t.needsUpdate = true; }).catch(e => console.warn('texture', e)); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep); t.anisotropy = 8; if (srgb) t.colorSpace = THREE.SRGBColorSpace; return t; }
 TX.wood = img(woodDiffURL); TX.woodR = img(woodRoughURL, { srgb: false }); TX.woodB = img(woodBumpURL, { srgb: false });
 TX.grass = img(grassURL); TX.brick = img(brickURL); TX.brickB = img(brickBumpURL, { srgb: false });
 
@@ -769,7 +770,7 @@ function place(name, x, z, rot, { scale = 1, y = 0, parent = furnGroup, solidR, 
   parent.add(o); if (solidR) solid(x - solidR[0], z - solidR[1], x + solidR[0], z + solidR[1]); if (fn) fn(o);
 }
 const loads = [['sofa', sofaURL], ['chair', chairURL], ['plant', plantURL], ['vase', vaseURL], ['pouf', poufURL], ['car', carURL]]
-  .map(([k, u]) => new Promise(res => loader.load(u, g => { models[k] = g.scene; res(); }, undefined, e => { console.warn(k, e); res(); })));
+  .map(([k, u]) => new Promise(res => loader.parse(u.slice().buffer, '', g => { models[k] = g.scene; res(); }, e => { console.warn(k, e); res(); })));
 Promise.all(loads).then(() => {
   place('sofa', 1.7, 11.15, Math.PI, { solidR: [1.1, 0.5] });                  // divano rivolto verso la TV
   place('chair', 0.65, 12.35, Math.PI / 2, { solidR: [0.4, 0.4] });  // poltrona lettura vicino alla finestra
@@ -787,7 +788,7 @@ Promise.all(loads).then(() => {
 /* ═════════════════════════ Etichette ═════════════════════════ */
 function label(text, sub, x, y, z) {
   const c = document.createElement('canvas'); c.width = 640; c.height = 180; const g = c.getContext('2d');
-  g.fillStyle = 'rgba(18,22,28,.82)'; g.beginPath(); g.roundRect(8, 8, 624, 164, 36); g.fill();
+  g.fillStyle = 'rgba(18,22,28,.82)'; g.beginPath(); if (g.roundRect) g.roundRect(8, 8, 624, 164, 36); else g.rect(8, 8, 624, 164); g.fill();
   g.fillStyle = '#fff'; g.font = '600 62px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(text, 320, 84);
   g.fillStyle = '#ffc98a'; g.font = '46px system-ui, sans-serif'; g.fillText(sub, 320, 144);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
@@ -953,7 +954,7 @@ const sel = document.getElementById('rooms');
 sel.onchange = () => { const v = JSON.parse(sel.selectedOptions[0].dataset.v); teleport(v[0], v[1], v[2]); sel.selectedIndex = 0; canvas.focus(); };
 document.querySelectorAll('[data-facade]').forEach(b => b.onclick = () => { M.facade.color.set(b.dataset.facade); document.querySelectorAll('[data-facade]').forEach(x => x.classList.toggle('on', x === b)); });
 document.getElementById('help').onclick = () => document.getElementById('helpBox').classList.toggle('show');
-document.getElementById('start').onclick = () => document.getElementById('intro').remove();
+// il pulsante "Entra in casa" è collegato da uno script nel template, indipendente da questo
 
 function resize() {
   renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
@@ -988,4 +989,8 @@ function frame(now) {
 if (hq) buildComposer();
 resize(); applyTime(hour); updateEnv(); setMode('walk');
 window.__casa = { teleport, setMode, setRoof, applyTime, player, colliders, toggleLabels, setHQ: v => { hq = v; tHQ.classList.toggle('on', hq); if (hq && !composer) buildComposer(); resize(); }, ready: () => document.body.classList.contains('loaded') };
-requestAnimationFrame(frame);
+// il rendering parte solo quando si chiude l'introduzione: così il pulsante risponde subito anche su dispositivi lenti
+let started = false;
+function startRender() { if (started) return; started = true; last = performance.now(); requestAnimationFrame(frame); }
+window.__casaStart = startRender;
+if (!document.getElementById('intro')) startRender();

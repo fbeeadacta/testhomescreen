@@ -38,6 +38,7 @@
   #intro h2 { font-size: 28px; margin-bottom: 4px; }
   #intro p { opacity: .8; margin: 8px 0; }
   #intro button { margin-top: 14px; padding: 12px 28px; font-size: 16px; background: var(--ac); color: #1a1209; border: 0; font-weight: 650; border-radius: 999px; }
+  #intro .err { color: #ffb4a0; font-size: 13px; margin-top: 12px; }
   #intro .meta { font-size: 12px; opacity: .55; margin-top: 18px; }
   @media (max-width: 720px) { #mm { width: 100px; height: 138px; bottom: 70px; } #bar { top: 6px; left: 6px; right: 6px; padding: 8px; } #bar h1 small { display: none; } input[type=range] { width: 80px; } }
 </style>
@@ -89,11 +90,24 @@
     <h2>Casa Tovo</h2>
     <p>Render navigabile ricostruito sulle quote della Tav. 02 (Piante – Sol. A) e della sezione A-A del progetto preliminare – Comune di Brogliano.</p>
     <p>Entra, cammina nelle stanze, esci sul portico, sali in vista aerea o guarda la pianta senza tetto.</p>
-    <button id="start">Entra in casa</button>
+    <button id="start" type="button">Entra in casa</button>
+    <p id="err" class="err" hidden></p>
     <p class="meta">Muri, stanze, porte e finestre seguono le quote di progetto; arredi, materiali e contesto sono indicativi.</p>
   </div>
 </div>
 
+<script>
+// Collegato subito e indipendente dal motore 3D: l'introduzione si chiude sempre.
+(function () {
+  var intro = document.getElementById('intro'), err = document.getElementById('err');
+  document.getElementById('start').addEventListener('click', function () { if (intro && intro.parentNode) intro.parentNode.removeChild(intro); if (window.__casaStart) window.__casaStart(); });
+  window.addEventListener('error', function (e) {
+    if (!err) return; err.hidden = false;
+    err.textContent = 'Il 3D non è partito in questo visualizzatore (' + (e.message || 'errore sconosciuto') + '). Apri il file in Chrome, Safari o Edge.';
+  });
+  try { var c = document.createElement('canvas'); if (!(c.getContext('webgl2') || c.getContext('webgl'))) { err.hidden = false; err.textContent = 'Questo visualizzatore non supporta WebGL: apri il file in Chrome, Safari o Edge.'; } } catch (x) {}
+})();
+</script>
 <script>/*APP*/</script>
 </body>
 </html>
