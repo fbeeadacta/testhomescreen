@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Casa Tovo – Render navigabile</title>
+<style>
+  :root { --bg: rgba(18,22,28,.78); --fg: #f2efe9; --ac: #ffa53c; --line: rgba(255,255,255,.14); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0b1226; font: 14px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--fg); touch-action: none; }
+  canvas#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; outline: none; cursor: grab; }
+  .panel { position: fixed; background: var(--bg); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  #bar { top: 12px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+  #bar h1 { font-size: 15px; font-weight: 650; margin-right: 6px; white-space: nowrap; }
+  #bar h1 small { display: block; font-weight: 400; opacity: .65; font-size: 11px; }
+  .grp { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  button, select { font: inherit; color: var(--fg); background: rgba(255,255,255,.08); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+  button:hover, select:hover { background: rgba(255,255,255,.16); }
+  button.on { background: var(--ac); color: #1a1209; border-color: var(--ac); font-weight: 600; }
+  select option { color: #111; }
+  .sw { width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 2px solid transparent; }
+  .sw.on { border-color: #fff; background-clip: padding-box; }
+  label.t { display: flex; gap: 6px; align-items: center; font-size: 12px; opacity: .9; }
+  input[type=range] { width: 110px; accent-color: var(--ac); }
+  #mm { position: fixed; right: 12px; bottom: 12px; width: 150px; height: 235px; border-radius: 10px; border: 1px solid var(--line); cursor: crosshair; }
+  #hint { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); padding: 8px 14px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); font-size: 12.5px; pointer-events: none; transition: opacity .3s; text-align: center; }
+  #hint.dim { opacity: .0; }
+  #cross { position: fixed; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: rgba(255,255,255,.7); mix-blend-mode: difference; pointer-events: none; }
+  #helpBox { display: none; top: 86px; left: 12px; max-width: 340px; font-size: 13px; }
+  #helpBox.show { display: block; }
+  #helpBox kbd { background: rgba(255,255,255,.15); padding: 1px 6px; border-radius: 4px; font: 12px ui-monospace, monospace; }
+  #helpBox p { margin: 3px 0; }
+  #intro { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, rgba(20,28,45,.82), rgba(5,8,14,.95)); text-align: center; padding: 20px; }
+  #intro .card { max-width: 480px; }
+  #intro h2 { font-size: 28px; margin-bottom: 4px; }
+  #intro p { opacity: .8; margin: 8px 0; }
+  #intro button { margin-top: 14px; padding: 12px 28px; font-size: 16px; background: var(--ac); color: #1a1209; border: 0; font-weight: 650; border-radius: 999px; }
+  #intro .meta { font-size: 12px; opacity: .55; margin-top: 18px; }
+  @media (max-width: 720px) { #mm { width: 100px; height: 157px; bottom: 70px; } #bar { top: 6px; left: 6px; right: 6px; padding: 8px; } #bar h1 small { display: none; } input[type=range] { width: 80px; } }
+</style>
+</head>
+<body>
+<canvas id="c" tabindex="0"></canvas>
+<div id="cross"></div>
+
+<div id="bar" class="panel">
+  <h1>Casa Tovo <small>Progetto preliminare · Sol. A</small></h1>
+  <div class="grp">
+    <button data-mode="walk" class="on" title="Cammina dentro casa">🚶 Cammina</button>
+    <button data-mode="orbit" title="Gira attorno alla casa">🏠 Esterno</button>
+    <button data-mode="top" title="Pianta dall'alto, senza tetto">📐 Pianta</button>
+  </div>
+  <div class="grp"><select id="rooms" title="Vai a…"><option disabled selected hidden>Vai a…</option></select></div>
+  <div class="grp">
+    <button id="tRoof" class="on">Tetto</button>
+    <button id="tFurn" class="on">Arredi</button>
+    <button id="tLab">Etichette</button>
+    <button id="tLight" class="on">Luci</button>
+  </div>
+  <div class="grp"><label class="t">🕒 <input id="time" type="range" min="0" max="24" step="0.25" value="15"><span id="timeLbl">15:00</span></label></div>
+  <div class="grp" title="Colore facciata">
+    <button class="sw on" data-facade="#c98f6a" style="background:#c98f6a"></button>
+    <button class="sw" data-facade="#efeae0" style="background:#efeae0"></button>
+    <button class="sw" data-facade="#a9b0a4" style="background:#a9b0a4"></button>
+    <button class="sw" data-facade="#6f7b86" style="background:#6f7b86"></button>
+  </div>
+  <div class="grp" style="margin-left:auto"><button id="help">?</button></div>
+</div>
+
+<div id="helpBox" class="panel">
+  <p><b>Cammina</b>: clicca sulla scena, poi <kbd>W A S D</kbd> / frecce per muoverti, mouse per guardare, <kbd>Shift</kbd> per correre, <kbd>Esc</kbd> per liberare il mouse.</p>
+  <p><b>Touch</b>: metà sinistra dello schermo = joystick, metà destra = sguardo.</p>
+  <p><kbd>E</kbd> cambia vista · <kbd>R</kbd> tetto · <kbd>L</kbd> etichette.</p>
+  <p><b>Esterno / Pianta</b>: trascina per ruotare, rotellina per zoom, tasto destro per spostare.</p>
+  <p>La minimappa in basso a destra è cliccabile per spostarti.</p>
+</div>
+
+<div id="hint">Clicca e trascina per guardare · <b>WASD</b> per camminare · <b>E</b> cambia vista</div>
+<canvas id="mm" width="300" height="470"></canvas>
+
+<div id="intro">
+  <div class="card">
+    <h2>Casa Tovo</h2>
+    <p>Render navigabile ricavato dalle tavole 02, 03 e 05 del progetto preliminare (Sol. A) – Comune di Brogliano.</p>
+    <p>Entra, cammina nelle stanze, esci sul portico, sali in vista aerea o guarda la pianta senza tetto.</p>
+    <button id="start">Entra in casa</button>
+    <p class="meta">Modello ricostruito dalle quote delle tavole: misure e arredi sono indicativi, non vincolanti.</p>
+  </div>
+</div>
+
+<script>/*THREE*/</script>
+<script>/*ORBIT*/</script>
+<script>/*APP*/</script>
+</body>
+</html>
